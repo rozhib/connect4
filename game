@@ -1,0 +1,201 @@
+import tkinter as tk
+from tkinter import *
+
+
+
+def click(event):
+    global board, grid, player, p1, p2, playertext, resetbutton
+    nums = ['0','1','2','3','4','5','6']
+    
+    row = 0
+    col = -1
+    if not board.gettags(CURRENT):
+        return
+    for s in board.gettags(CURRENT):
+        if s in nums:
+           col = int(s)
+    while row < 5:
+        piece = grid[row+1][col]
+        cur_tags = board.gettags(piece)
+        if p1 not in cur_tags and p2 not in cur_tags:
+            row+=1
+        else:
+            break
+    if player =="blue":
+        board.itemconfig(grid[row][col], fill="#90c3f5")
+    else:
+        board.itemconfig(grid[row][col], fill="#e8646f")
+    board.itemconfig(grid[row][col], tags=(player))
+
+    checkwin(row, col, v)
+    if not gameOver:
+        checkwin(row, col, fr)
+    if not gameOver:
+        checkwin(row, col, h)
+    if not gameOver:
+        checkwin(row, col, ur)
+    
+
+    draw = True
+    for piece in grid[0]:
+        cur_colors = board.gettags(piece)
+        if p1 not in cur_colors and p2 not in cur_colors:
+            draw = False
+            break
+
+    if gameOver:
+        newText = player + " wins"
+        resetbutton.pack()
+    elif draw:
+        newText = "draw"
+        resetbutton.pack()
+    else:
+        if player == p1:
+            player = p2
+        else:
+            player = p1
+        newText = player + "'s turn"
+
+    board.itemconfig(playertext, fill="#0d0e0f", text=newText)
+    
+def endGame(str):
+    newText = str
+    resetbutton.pack()
+
+def checkwin(row, col, direction):
+    global gameOver, grid, board, player, winCoords
+    count = 0
+    
+    if direction == v:
+        for i in range(3):
+            if row < 5:
+                row += 1
+            else:
+                break
+        for j in range(6):
+            currentSpot= grid[row][col]
+            if player in board.gettags(currentSpot):
+                count += 1
+                if count == 4:
+                    gameOver = True
+            else:
+                count = 0
+            if row - 1 >= 0:
+                row -= 1
+            else:
+                break
+    
+    elif direction == h:
+        for i in range(3):
+            if col < 6:
+                col += 1
+            else:
+                break
+        for j in range(7):
+            currentSpot= grid[row][col]
+            if player in board.gettags(currentSpot):
+                count += 1
+                if count == 4:
+                    gameOver = True
+            else:
+                count = 0
+            if col - 1 >= 0:
+                col -= 1
+            else:
+                break
+    
+    elif direction == fr:
+        for i in range(3):
+            if col < 6 and row < 5:
+                col += 1
+                row += 1
+            else:
+                break
+        for k in range(6):
+            currentSpot= grid[row][col]
+            if player in board.gettags(currentSpot):
+                count += 1
+                if count == 4:
+                    gameOver = True
+            else:
+                count = 0
+            if col - 1 >= 0 and row - 1 >= 0:
+                col -= 1
+                row -= 1
+            else:
+                break
+    elif direction == ur:
+        for i in range(3):
+            if col > 0 and row < 5:
+                col -= 1
+                row += 1
+            else:
+                break
+        for j in range(6):
+            currentSpot= grid[row][col]
+            if player in board.gettags(currentSpot):
+                count += 1
+                if count == 4:
+                    
+                    gameOver = True
+            else:
+                count = 0
+            if col + 1 <= 6 and row - 1 >= 0:
+                col += 1
+                row -= 1
+            else:
+                break
+    
+
+def reset():
+    global board, resetbutton
+    board.delete("all")
+    resetbutton.pack_forget()
+    setupgrid()
+
+def setupgrid():
+    global gameOver, board, playertext, grid, player
+    board.delete("all")
+    gameOver=False
+    player = p2
+    grid=[]
+    cstart = 45
+    rstart = 40
+    rinc = rstart
+    cinc = cstart
+    for x in range(6):
+        new_list=[]
+        for y in range(7):
+            spot = board.create_oval(cinc, rinc, cinc+50, rinc+50, fill="white", tags=("piece",y))
+            cinc += 60
+            new_list.append(spot)
+        rinc += 60
+        cinc = cstart
+        grid.append(new_list)
+
+    board.tag_bind("piece", '<Button-1>', click)
+
+    playertext = board.create_text(250, 25, fill="#0d0e0f", font='Arial 20 bold', text=player + "'s turn")
+    board.pack()
+
+root = tk.Tk()
+root.title("CONNECT 4")
+root.geometry('500x450')
+
+
+v = 1
+h = 2
+fr = 3
+ur = 4
+
+
+gameOver = False
+p1 = 'red'
+p2 = 'blue'
+player = p2
+grid = []
+board = Canvas(root, width=500, height=400, bg="#c0b2d1")
+board.pack()
+resetbutton = Button(root, text="New Game", command=reset, justify=CENTER, bg='lightgray', fg='black') 
+reset()
+root.mainloop()
